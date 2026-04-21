@@ -1,20 +1,21 @@
+import { prisma } from '@/lib/prisma';
 import { LaboratoryCard } from '@/components/modules/laboratories/laboratory-card';
-import { getMockLaboratories } from '@/lib/mock-data';
 
 export const metadata = {
-  title: 'Laboratorios - Lab Manager',
-  description: 'Gestión de laboratorios disponibles',
+  title: 'Laboratorios — Lab Manager',
 };
 
-export default function LaboratoriesPage() {
-  const laboratories = getMockLaboratories();
+export default async function LaboratoriesPage() {
+  const laboratories = await prisma.laboratory.findMany({
+    orderBy: { name: 'asc' },
+  });
 
   return (
     <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">Laboratorios</h1>
         <p className="text-lg text-slate-600">
-          Gestiona el estado y disponibilidad de los laboratorios.
+          Estado y disponibilidad de los laboratorios de informática.
         </p>
       </div>
 

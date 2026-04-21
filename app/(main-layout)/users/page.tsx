@@ -1,51 +1,49 @@
-'use client';
+import { getSession } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
+import { UsersClient } from '@/components/modules/users/users-client';
 
-import { useState, useMemo } from 'react';
-import { UserFilters } from '@/components/modules/users/user-filters';
-import { UsersTable } from '@/components/modules/users/users-table';
-import { getMockUsers } from '@/lib/mock-data';
+export const metadata = { title: 'Usuarios — Lab Manager' };
 
-export default function UsersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRole, setSelectedRole] = useState('all');
+export default async function UsersPage() {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') redirect('/dashboard');
 
-  const allUsers = getMockUsers();
+  // Solo usuarios ya aprobados (activos o bloqueados), sin admins
+  const users = await prisma.user.findMany({
+    where: { status: { in: ['active', 'blocked'] }, role: { not: 'admin' } },
+    orderBy: { fullName: 'asc' },
+    select: {
+      id: true,
+      cedula: true,
+      fullName: true,
+      email: true,
+      role: true,
+      status: true,
+      createdAt: true,
+    },
+  });
 
-  // Filter users based on search and role
-  const filteredUsers = useMemo(() => {
-    return allUsers.filter((user) => {
-      const matchesSearch =
-        user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.cedula.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-      return matchesSearch && matchesRole;
-    });
-  }, [searchQuery, selectedRole]);
+  const serialized = users.map((u) => ({
+    ...u,
+    createdAt: u.createdAt.toISOString(),
+  }));
 
   return (
     <div className="space-y-6">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Gestión de Usuarios</h1>
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Usuarios</h1>
         <p className="text-lg text-slate-600">
-          Administra los usuarios del sistema y sus roles de acceso.
+          Administra los usuarios activos del sistema. Los nuevos usuarios pendientes
+          de aprobación se gestionan en{' '}
+          <a href="/admin/users" className="text-blue-600 hover:underline">
+            Solicitudes de acceso
+          </a>
+          .
         </p>
       </div>
 
-      <UserFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedRole={selectedRole}
-        onRoleChange={setSelectedRole}
-      />
-
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Usuarios ({filteredUsers.length})
-          </h2>
-        </div>
-        <UsersTable users={filteredUsers} />
-      </div>
+      <UsersClient users={serialized} />
     </div>
   );
 }

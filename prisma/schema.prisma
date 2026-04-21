@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  professor
+  student
+}
+
+enum UserStatus {
+  pending_email_verification
+  pending_approval
+  active
+  blocked
+}
+
+enum LabStatus {
+  available
+  maintenance
+  out_of_service
+}
+
+enum ComputerStatus {
+  available
+  maintenance
+  out_of_service
+}
+
+enum ReservationStatus {
+  pending
+  approved
+  rejected
+  cancelled
+  finished
+}
+
+enum ReservationType {
+  lab      // Profesor reserva el laboratorio completo
+  computer // Estudiante reserva una computadora específica
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  cedula        String     @unique
+  fullName      String
+  email         String     @unique
+  password      String
+  role          Role
+  status        UserStatus @default(pending_email_verification)
+  emailVerified Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  reservations Reservation[]
+  otpCodes     OtpCode[]
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  /// "register" | "login"
+  purpose   String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Laboratory {
+  id          String    @id @default(cuid())
+  name        String
+  capacity    Int
+  operational Int
+  status      LabStatus @default(available)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  computers    Computer[]
+  reservations Reservation[]
+}
+
+model Computer {
+  id           String         @id @default(cuid())
+  number       Int
+  laboratoryId String
+  status       ComputerStatus @default(available)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  laboratory           Laboratory            @relation(fields: [laboratoryId], references: [id], onDelete: Cascade)
+  computerReservations ComputerReservation[]
+
+  @@unique([laboratoryId, number])
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  userId       String
+  laboratoryId String
+  /// Fecha en formato YYYY-MM-DD
+  date         String
+  startTime    String
+  endTime      String
+  status       ReservationStatus @default(pending)
+  type         ReservationType
+  purpose      String?
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  user                 User                  @relation(fields: [userId], references: [id])
+  laboratory           Laboratory            @relation(fields: [laboratoryId], references: [id])
+  computerReservations ComputerReservation[]
+}
+
+model ComputerReservation {
+  id            String @id @default(cuid())
+  reservationId String
+  computerId    String
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  computer    Computer    @relation(fields: [computerId], references: [id])
+
+  @@unique([computerId, reservationId])
+}
