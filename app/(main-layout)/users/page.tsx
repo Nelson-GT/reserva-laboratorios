@@ -34,10 +34,10 @@ export default async function UsersPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">Usuarios</h1>
         <p className="text-lg text-slate-600">
-          Administra los usuarios activos del sistema. Los nuevos usuarios pendientes
-          de aprobación se gestionan en{' '}
+          Administra los usuarios activos del sistema de reservas. Los usuarios pendientes
+          por aprobación institucional se gestionan en{' '}
           <a href="/admin/users" className="text-blue-600 hover:underline">
-            Solicitudes de acceso
+            Solicitudes
           </a>
           .
         </p>

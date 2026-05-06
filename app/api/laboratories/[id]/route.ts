@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: Params) {
     },
   });
 
-  if (!lab) {
+  if (!lab || lab.deletedAt) {
     return NextResponse.json({ error: 'Laboratorio no encontrado' }, { status: 404 });
   }
 
@@ -58,6 +58,10 @@ export async function DELETE(_req: Request, { params }: Params) {
 
   const { id } = await params;
 
-  await prisma.laboratory.delete({ where: { id } });
+  await prisma.laboratory.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
   return NextResponse.json({ ok: true });
 }

@@ -37,11 +37,11 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">
-          Solicitudes de acceso
+          Solicitudes de Aprobación
         </h1>
         <p className="text-lg text-slate-600">
-          Usuarios que han solicitado acceso al sistema y están pendientes de
-          validación de identidad.
+          Gestione los usuarios que han solicitado acceso al sistema de reservas y están pendientes de
+          validación de identidad institucional.
         </p>
       </div>
 

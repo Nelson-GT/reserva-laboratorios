@@ -24,7 +24,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'Inicio',
     href: '/dashboard',
     icon: LayoutDashboard,
     roles: ['admin', 'professor', 'student'],
@@ -36,7 +36,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['admin'],
   },
   {
-    label: 'Aprobar Usuarios',
+    label: 'Solicitudes',
     href: '/admin/users',
     icon: UserCheck,
     roles: ['admin'],
@@ -48,13 +48,13 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['admin', 'professor', 'student'],
   },
   {
-    label: 'Reservar Laboratorio',
+    label: 'Reservar',
     href: '/reservations/new',
     icon: Calendar,
     roles: ['professor'],
   },
   {
-    label: 'Reservar Computadora',
+    label: 'Reservar',
     href: '/computers',
     icon: Monitor,
     roles: ['student'],
@@ -66,7 +66,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['professor', 'student'],
   },
   {
-    label: 'Todas las Reservas',
+    label: 'Reservas',
     href: '/reservations',
     icon: Calendar,
     roles: ['admin'],
@@ -82,13 +82,12 @@ export function Sidebar({ role }: { role: Role }) {
     <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white h-screen border-r border-slate-700 flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-slate-700">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <Microscope className="w-5 h-5 text-white" />
           </div>
           <h1 className="text-xl font-bold">Lab Manager</h1>
         </div>
-        <p className="text-sm text-slate-400 mt-2">UJAP</p>
       </div>
 
       {/* Nav */}
@@ -126,7 +125,6 @@ export function Sidebar({ role }: { role: Role }) {
             <span className="font-medium text-sm">Cerrar sesión</span>
           </button>
         </form>
-        <p className="text-slate-500 text-xs mt-3 px-1">© 2025 Lab Manager</p>
       </div>
     </aside>
   );

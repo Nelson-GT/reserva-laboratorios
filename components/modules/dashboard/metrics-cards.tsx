@@ -1,71 +1,186 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import {
+  CalendarCheck,
+  CalendarClock,
+  Monitor,
+  Microscope,
+  Users,
+  UserCheck,
+  TrendingUp,
+  ArrowUpRight,
+} from 'lucide-react';
 
-interface MetricsCardsProps {
-  totalReservationsToday: number;
-  activeLaboratories: number;
-  pendingUsers?: number;
+// ─── Base card ────────────────────────────────────────────────────────────────
+
+interface KpiCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: number | string;
+  sub?: string;
+  iconBg: string;
+  iconColor: string;
+  href?: string;
+  alert?: boolean;
 }
 
-export function MetricsCards({ totalReservationsToday, activeLaboratories, pendingUsers }: MetricsCardsProps) {
+function KpiCard({ icon: Icon, label, value, sub, iconBg, iconColor, href, alert }: KpiCardProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-      {/* Reservations Today */}
-      <Card className="bg-white border-slate-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-slate-900">
-            Reservas de Hoy
-          </CardTitle>
-          <CardDescription className="text-slate-500">
-            Reservaciones activas para hoy
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-blue-600">
-            {totalReservationsToday}
-          </div>
-          <p className="text-sm text-slate-500 mt-2">
-            Total de reservas pendientes y aprobadas
-          </p>
-        </CardContent>
-      </Card>
+    <div
+      className={`bg-white rounded-xl border shadow-sm p-5 flex flex-col gap-4 transition-shadow hover:shadow-md ${
+        alert ? 'border-amber-300' : 'border-slate-200'
+      }`}
+    >
+      <div className="flex items-start justify-between">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+        {href && (
+          <Link
+            href={href}
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+            title="Ver detalle"
+          >
+            <ArrowUpRight className="w-4 h-4" />
+          </Link>
+        )}
+      </div>
 
-      {/* Active Laboratories */}
-      <Card className="bg-white border-slate-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-slate-900">
-            Laboratorios Activos
-          </CardTitle>
-          <CardDescription className="text-slate-500">
-            Laboratorios disponibles para uso
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-green-600">
-            {activeLaboratories}
-          </div>
-          <p className="text-sm text-slate-500 mt-2">
-            Laboratorios en estado disponible
-          </p>
-        </CardContent>
-      </Card>
-      {pendingUsers !== undefined && (
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-900">
-              Usuarios Pendientes
-            </CardTitle>
-            <CardDescription className="text-slate-500">
-              Esperando aprobación del administrador
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-amber-600">{pendingUsers}</div>
-            <p className="text-sm text-slate-500 mt-2">
-              Usuarios por validar
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div>
+        <p className="text-3xl font-bold text-slate-900 leading-none mb-2">{value}</p>
+        <p className="text-sm font-medium text-slate-600">{label}</p>
+      </div>
     </div>
   );
+}
+
+// ─── Admin metrics ────────────────────────────────────────────────────────────
+
+interface AdminMetrics {
+  todayApproved: number;
+  todayPending: number;
+  weekReservations: number;
+  availableComputers: number;
+  totalComputers: number;
+  availableLabs: number;
+  totalLabs: number;
+  activeUsers: number;
+  pendingUsers: number;
+}
+
+function AdminCards({ m }: { m: AdminMetrics }) {
+  const todayTotal = m.todayApproved + m.todayPending;
+  return (
+    <div className="space-y-4">
+      {/* Row 1 — primary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard
+          icon={CalendarCheck}
+          label="Reservas de hoy"
+          value={todayTotal}
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+          href="/reservations"
+        />
+        <KpiCard
+          icon={Monitor}
+          label="Computadoras disponibles"
+          value={`${m.availableComputers}/${m.totalComputers}`}
+          iconBg="bg-green-100"
+          iconColor="text-green-600"
+          href="/laboratories"
+        />
+        <KpiCard
+          icon={UserCheck}
+          label="Pendientes por aprobación"
+          value={m.pendingUsers}
+          iconBg="bg-amber-100"
+          iconColor="text-amber-600"
+          href="/admin/users"
+          alert={m.pendingUsers > 0}
+        />
+      </div>
+
+      {/* Row 2 — secondary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard
+          icon={TrendingUp}
+          label="Reservas de la semana"
+          value={m.weekReservations}
+          iconBg="bg-indigo-100"
+          iconColor="text-indigo-600"
+        />
+        <KpiCard
+          icon={Microscope}
+          label="Laboratorios operativos"
+          value={`${m.availableLabs}/${m.totalLabs}`}
+          iconBg="bg-teal-100"
+          iconColor="text-teal-600"
+          href="/laboratories"
+        />
+        <KpiCard
+          icon={Users}
+          label="Usuarios habilitados"
+          value={m.activeUsers}
+          iconBg="bg-slate-100"
+          iconColor="text-slate-600"
+          href="/users"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Professor / Student metrics ──────────────────────────────────────────────
+
+interface UserMetrics {
+  myActive: number;
+  myWeek: number;
+  availableComputers: number;
+  totalComputers: number;
+  availableLabs: number;
+  totalLabs: number;
+}
+
+function UserCards({ m, role }: { m: UserMetrics; role: 'professor' | 'student' }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <KpiCard
+        icon={CalendarCheck}
+        label="Mis reservas activas"
+        value={m.myActive}
+        iconBg="bg-blue-100"
+        iconColor="text-blue-600"
+        href="/reservations"
+      />
+      <KpiCard
+        icon={role === 'professor' ? Microscope : Monitor}
+        label={role === 'professor' ? 'Laboratorios disponibles' : 'Computadoras disponibles'}
+        value={role === 'professor' ? `${m.availableLabs}/${m.totalLabs}` : `${m.availableComputers}/${m.totalComputers}`}
+        iconBg={role === 'professor' ? 'bg-teal-100' : 'bg-green-100'}
+        iconColor={role === 'professor' ? 'text-teal-600' : 'text-green-600'}
+        href={role === 'professor' ? '/laboratories' : '/computers'}
+      />
+      <KpiCard
+        icon={CalendarClock}
+        label="Reservas de la semana"
+        value={m.myWeek}
+        iconBg="bg-indigo-100"
+        iconColor="text-indigo-600"
+        href="/reservations"
+      />
+    </div>
+  );
+}
+
+// ─── Exported component ───────────────────────────────────────────────────────
+
+type Props =
+  | { role: 'admin'; metrics: AdminMetrics }
+  | { role: 'professor' | 'student'; metrics: UserMetrics };
+
+export function MetricsCards(props: Props) {
+  if (props.role === 'admin') {
+    return <AdminCards m={props.metrics} />;
+  }
+  return <UserCards m={props.metrics} role={props.role} />;
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generatePublicId } from '@/lib/computers';
 
 export async function GET() {
   const session = await getSession();
@@ -9,8 +10,9 @@ export async function GET() {
   }
 
   const labs = await prisma.laboratory.findMany({
+    where: { deletedAt: null },
     include: {
-      _count: { select: { computers: true } },
+      computers: { select: { status: true } },
     },
     orderBy: { name: 'asc' },
   });
@@ -44,12 +46,22 @@ export async function POST(request: Request) {
     },
   });
 
-  // Crear computadoras automáticamente
-  const computers = Array.from({ length: lab.capacity }, (_, i) => ({
-    number: i + 1,
-    laboratoryId: lab.id,
-  }));
-  await prisma.computer.createMany({ data: computers });
+  // Crear computadoras con publicId único
+  for (let i = 0; i < lab.capacity; i++) {
+    const publicId = await generatePublicId();
+    await prisma.computer.create({
+      data: {
+        number: i + 1,
+        laboratoryId: lab.id,
+        publicId,
+      },
+    });
+  }
 
-  return NextResponse.json(lab, { status: 201 });
+  const labWithComputers = await prisma.laboratory.findUnique({
+    where: { id: lab.id },
+    include: { computers: { select: { status: true } } },
+  });
+
+  return NextResponse.json(labWithComputers, { status: 201 });
 }

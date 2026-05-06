@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { useState, useTransition, useMemo } from 'react';
+import { CheckCircle, XCircle, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,8 +28,8 @@ type User = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending_email_verification: 'Pendiente de correo',
-  pending_approval: 'Pendiente de aprobación',
+  pending_email_verification: 'Pendiente por verificación de correo',
+  pending_approval: 'Pendiente por aprobación',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -51,9 +52,21 @@ async function patchUser(id: string, status: string) {
 }
 
 export function PendingUsersTable({ users: initial }: { users: User[] }) {
-  // Al aprobar o rechazar, el usuario sale de la lista
   const [users, setUsers] = useState(initial);
+  const [search, setSearch] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return q
+      ? users.filter(
+          (u) =>
+            u.fullName.toLowerCase().includes(q) ||
+            u.cedula.includes(q) ||
+            u.email.toLowerCase().includes(q)
+        )
+      : users;
+  }, [users, search]);
 
   function remove(id: string) {
     setUsers((prev) => prev.filter((u) => u.id !== id));
@@ -82,21 +95,38 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <>
+      {/* Search */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Input
+          placeholder="Buscar por nombre, cédula de identidad o correo electrónico..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center text-slate-400">
+          No se encontraron solicitudes.
+        </div>
+      ) : (
+      <div className="bg-white border-y border-slate-200 overflow-hidden shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50">
-            <TableHead>Nombre</TableHead>
-            <TableHead>Cédula</TableHead>
-            <TableHead>Correo</TableHead>
+            <TableHead>Nombre Completo</TableHead>
+            <TableHead>Cédula de Identidad</TableHead>
+            <TableHead>Correo Electrónico</TableHead>
             <TableHead>Rol</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Registro</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
+          {filtered.map((user) => (
             <TableRow key={user.id} className="hover:bg-slate-50">
               <TableCell className="font-medium">{user.fullName}</TableCell>
               <TableCell className="text-slate-600">{user.cedula}</TableCell>
@@ -124,8 +154,7 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
                       disabled={isPending}
                       onClick={() => handleApprove(user.id)}
                     >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Aprobar
+                      <CheckCircle className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
@@ -134,8 +163,7 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
                       disabled={isPending}
                       onClick={() => handleReject(user.id)}
                     >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Rechazar
+                      <XCircle className="w-4 h-4" />
                     </Button>
                   </div>
                 ) : (
@@ -148,6 +176,8 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
           ))}
         </TableBody>
       </Table>
-    </div>
+      </div>
+      )}
+    </>
   );
 }
