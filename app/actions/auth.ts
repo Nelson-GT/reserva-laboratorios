@@ -143,18 +143,9 @@ export async function loginAction(
     };
   }
 
-  const code = await createOtp(user.id, 'login');
-
-  try {
-    await sendOtpEmail(email, code, 'login');
-  } catch (err) {
-    // El código igual se guarda en DB. El admin puede verlo en Prisma Studio.
-    console.error('[OTP] Error enviando correo — el código sigue disponible en la DB:', err);
-  }
-
-  await setOtpPending(user.id, 'login');
-
-  redirect('/verify-otp');
+  await setSession({ userId: user.id, role: user.role, email: user.email });
+  
+  redirect('/dashboard');
 }
 
 // ─── Verificar OTP ────────────────────────────────────────────────────────────
@@ -187,19 +178,12 @@ export async function verifyOtpAction(
 
   await clearOtpPending();
 
-  if (purpose === 'register') {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { emailVerified: true, status: 'pending_approval' },
-    });
-    redirect('/login?verified=1');
-  } else {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return { error: 'Usuario no encontrado.' };
-
-    await setSession({ userId: user.id, role: user.role, email: user.email });
-    redirect('/dashboard');
-  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: { emailVerified: true, status: 'pending_approval' },
+  });
+  
+  redirect('/login?verified=1');
 }
 
 // ─── Reenviar OTP ─────────────────────────────────────────────────────────────
