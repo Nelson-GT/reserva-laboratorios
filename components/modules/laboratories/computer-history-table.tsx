@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { TablePagination } from '@/components/ui/table-pagination';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
@@ -53,6 +54,11 @@ export function ComputerHistoryTable({ reservations }: { reservations: Reservati
     );
   }, [reservations, search]);
 
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [search]);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   if (reservations.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-400 shadow-sm">
@@ -101,7 +107,7 @@ export function ComputerHistoryTable({ reservations }: { reservations: Reservati
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {paginated.map((r) => (
                   <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3">
                       <p className="text-sm font-medium text-slate-800">{r.user.fullName}</p>
@@ -132,6 +138,7 @@ export function ComputerHistoryTable({ reservations }: { reservations: Reservati
               </tbody>
             </table>
           </div>
+          <TablePagination total={filtered.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
         </div>
       )}
     </>

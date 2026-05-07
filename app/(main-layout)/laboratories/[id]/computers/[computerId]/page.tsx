@@ -44,6 +44,7 @@ const COMPUTER_STATUS_CONFIG: Record<
 export default async function ComputerHistoryPage({ params }: Props) {
   const session = await getSession();
   if (!session) redirect('/login');
+  if (session.role !== 'admin') redirect('/laboratories');
 
   const { id: laboratoryId, computerId } = await params;
 

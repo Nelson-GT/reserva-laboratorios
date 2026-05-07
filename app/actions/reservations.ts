@@ -46,6 +46,12 @@ export async function createLabReservationAction(
     return { error: 'La hora de inicio debe ser anterior a la hora de fin.' };
   }
 
+  // Admin puede crear en nombre de otro usuario
+  const targetUserId =
+    session.role === 'admin' && formData.get('userId')
+      ? (formData.get('userId') as string)
+      : session.userId;
+
   // Verificar que el laboratorio existe y está disponible
   const lab = await prisma.laboratory.findUnique({
     where: { id: laboratoryId },
@@ -79,7 +85,7 @@ export async function createLabReservationAction(
 
   await prisma.reservation.create({
     data: {
-      userId: session.userId,
+      userId: targetUserId,
       laboratoryId,
       date,
       startTime,
@@ -134,6 +140,12 @@ export async function createComputerReservationAction(
     return { error: 'La hora de inicio debe ser anterior a la hora de fin.' };
   }
 
+  // Admin puede crear en nombre de otro usuario
+  const targetUserId =
+    session.role === 'admin' && formData.get('userId')
+      ? (formData.get('userId') as string)
+      : session.userId;
+
   // Verificar que la computadora existe y está disponible
   const computer = await prisma.computer.findUnique({
     where: { id: computerId },
@@ -174,7 +186,7 @@ export async function createComputerReservationAction(
   // Crear la reserva y asociar la computadora
   const reservation = await prisma.reservation.create({
     data: {
-      userId: session.userId,
+      userId: targetUserId,
       laboratoryId,
       date,
       startTime,
@@ -192,6 +204,103 @@ export async function createComputerReservationAction(
   revalidatePath('/reservations');
   revalidatePath('/computers');
   return { success: 'Reserva de computadora enviada. Pendiente de aprobación.' };
+}
+
+// ─── Reserva Recurrente de Laboratorio (Profesor) ────────────────────────────
+
+export async function createRecurringLabReservationAction(
+  _prevState: unknown,
+  formData: FormData
+): Promise<{ error?: string; success?: string; created?: string[]; skipped?: string[] }> {
+  const session = await getSession();
+  if (!session || (session.role !== 'professor' && session.role !== 'admin')) {
+    return { error: 'No tienes permiso para realizar esta acción.' };
+  }
+
+  const laboratoryId = (formData.get('laboratoryId') as string) ?? '';
+  const startDate = (formData.get('startDate') as string) ?? '';
+  const endDate = (formData.get('endDate') as string) ?? '';
+  const startTime = (formData.get('startTime') as string) ?? '';
+  const endTime = (formData.get('endTime') as string) ?? '';
+  const purpose = (formData.get('purpose') as string) ?? '';
+
+  const targetUserId =
+    session.role === 'admin' && formData.get('userId')
+      ? (formData.get('userId') as string)
+      : session.userId;
+
+  if (!laboratoryId || !startDate || !endDate || !startTime || !endTime || !purpose.trim()) {
+    return { error: 'Todos los campos son requeridos.' };
+  }
+
+  if (startTime >= endTime) {
+    return { error: 'La hora de inicio debe ser anterior a la hora de fin.' };
+  }
+
+  if (purpose.trim().length < 3) {
+    return { error: 'Describe el propósito de la reserva (mínimo 3 caracteres).' };
+  }
+
+  const lab = await prisma.laboratory.findUnique({ where: { id: laboratoryId } });
+  if (!lab || lab.deletedAt) return { error: 'Laboratorio no encontrado.' };
+  if (lab.status !== 'available') {
+    return { error: `El laboratorio "${lab.name}" no está disponible.` };
+  }
+
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (start < today) return { error: 'La fecha de inicio no puede ser anterior a hoy.' };
+  if (end <= start) return { error: 'La fecha de fin debe ser posterior a la fecha de inicio.' };
+
+  const dayOfWeek = start.getDay();
+
+  // Collect all matching dates (max 52 occurrences = ~1 year)
+  const dates: string[] = [];
+  const cur = new Date(start);
+  while (cur <= end && dates.length < 52) {
+    if (cur.getDay() === dayOfWeek) {
+      dates.push(cur.toISOString().split('T')[0]);
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  if (dates.length === 0) {
+    return { error: 'No hay fechas disponibles en el rango indicado.' };
+  }
+
+  const created: string[] = [];
+  const skipped: string[] = [];
+
+  for (const date of dates) {
+    const conflict = await prisma.reservation.findFirst({
+      where: { laboratoryId, date, type: 'lab', status: { in: ['pending', 'approved'] } },
+    });
+
+    if (conflict && timesOverlap(startTime, endTime, conflict.startTime, conflict.endTime)) {
+      skipped.push(date);
+      continue;
+    }
+
+    await prisma.reservation.create({
+      data: { userId: targetUserId, laboratoryId, date, startTime, endTime, purpose: purpose.trim(), type: 'lab', status: 'pending' },
+    });
+    created.push(date);
+  }
+
+  revalidatePath('/reservations');
+
+  if (created.length === 0) {
+    return { error: 'No se pudo crear ninguna reserva. Todas las fechas tienen conflictos de horario.', skipped };
+  }
+
+  return {
+    success: `Se crearon ${created.length} reserva${created.length > 1 ? 's' : ''}.${skipped.length > 0 ? ` (${skipped.length} omitida${skipped.length > 1 ? 's' : ''} por conflicto)` : ''}`,
+    created,
+    skipped,
+  };
 }
 
 // ─── Cancelar reserva (propio usuario) ───────────────────────────────────────

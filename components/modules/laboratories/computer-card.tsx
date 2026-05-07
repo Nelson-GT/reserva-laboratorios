@@ -43,17 +43,14 @@ const STATUS_CONFIG: Record<
 
 interface Props {
   computer: ComputerCardData;
-  onClick: (computer: ComputerCardData) => void;
+  onClick?: (computer: ComputerCardData) => void;
 }
 
 export function ComputerCard({ computer, onClick }: Props) {
   const config = STATUS_CONFIG[computer.status];
 
-  return (
-    <button
-      onClick={() => onClick(computer)}
-      className={`bg-white rounded-xl border-2 p-4 transition-all shadow-sm flex flex-col gap-3 w-full text-left cursor-pointer ${config.border} ${config.hover}`}
-    >
+  const inner = (
+    <>
       <p className="text-[11px] font-mono font-semibold text-slate-400 truncate tracking-wide">
         {computer.publicId ?? '—'}
       </p>
@@ -76,6 +73,23 @@ export function ComputerCard({ computer, onClick }: Props) {
         {computer._count.computerReservations}{' '}
         {computer._count.computerReservations === 1 ? 'reserva' : 'reservas'}
       </p>
+    </>
+  );
+
+  if (!onClick) {
+    return (
+      <div className={`bg-white rounded-xl border-2 p-4 shadow-sm flex flex-col gap-3 w-full ${config.border}`}>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => onClick(computer)}
+      className={`bg-white rounded-xl border-2 p-4 transition-all shadow-sm flex flex-col gap-3 w-full text-left cursor-pointer ${config.border} ${config.hover}`}
+    >
+      {inner}
     </button>
   );
 }

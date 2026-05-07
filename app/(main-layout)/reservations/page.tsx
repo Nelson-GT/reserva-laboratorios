@@ -17,7 +17,7 @@ export default async function ReservationsPage() {
       user: { select: { fullName: true, cedula: true, role: true } },
       laboratory: { select: { name: true } },
       computerReservations: {
-        include: { computer: { select: { number: true } } },
+        include: { computer: { select: { id: true, number: true, publicId: true } } },
       },
     },
     orderBy: { createdAt: 'desc' },
@@ -29,37 +29,32 @@ export default async function ReservationsPage() {
     updatedAt: r.updatedAt.toISOString(),
   }));
 
+  const laboratories =
+    session.role === 'admin' || session.role === 'professor' || session.role === 'student'
+      ? await prisma.laboratory.findMany({
+          where: { status: 'available', deletedAt: null },
+          orderBy: { name: 'asc' },
+          select: { id: true, name: true, capacity: true, operational: true },
+        })
+      : [];
+
   return (
     <div className="space-y-6">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-slate-900 mb-2">Reservas</h1>
         <p className="text-lg text-slate-600">
           {session.role === 'admin'
-            ? 'Gestiona todas las solicitudes de reserva del sistema.'
+            ? 'Gestione las solicitudes de reserva.'
             : 'Aquí puedes ver y gestionar tus solicitudes de reserva.'}
         </p>
-        {(session.role === 'professor') && (
-          <a
-            href="/reservations/new"
-            className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Nueva reserva de laboratorio
-          </a>
-        )}
-        {session.role === 'student' && (
-          <a
-            href="/computers"
-            className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            + Reservar computadora
-          </a>
-        )}
       </div>
 
       <ReservationsPageClient
         reservations={serialized}
         isAdmin={session.role === 'admin'}
         currentUserId={session.userId}
+        laboratories={laboratories}
+        role={session.role}
       />
     </div>
   );

@@ -284,7 +284,7 @@ export function LabDetailClient({ lab: initial, isAdmin }: { lab: Lab; isAdmin: 
             <ComputerCard
               key={computer.id}
               computer={computer}
-              onClick={openComputerModal}
+              onClick={isAdmin ? openComputerModal : undefined}
             />
           ))}
         </div>
@@ -375,13 +375,15 @@ export function LabDetailClient({ lab: initial, isAdmin }: { lab: Lab; isAdmin: 
                 </div>
               )}
 
-              <Link
-                href={`/laboratories/${lab.id}/computers/${selectedComputer.id}`}
-                className="flex items-center gap-1.5 w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-100 transition-colors"
-              >
-                <History className="w-4 h-4" />
-                Ver historial de reservas
-              </Link>
+              {isAdmin && (
+                <Link
+                  href={`/laboratories/${lab.id}/computers/${selectedComputer.id}`}
+                  className="flex items-center gap-1.5 w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-100 transition-colors"
+                >
+                  <History className="w-4 h-4" />
+                  Ver historial de reservas
+                </Link>
+              )}
             </div>
           )}
 

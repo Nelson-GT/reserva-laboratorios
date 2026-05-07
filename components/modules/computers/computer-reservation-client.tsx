@@ -103,7 +103,7 @@ export function ComputerReservationClient({
           </div>
 
           <div className="space-y-1">
-            <Label>Hora de inicio</Label>
+            <Label>Hora de Inicio</Label>
             <select
               value={startTime}
               onChange={(e) => {
@@ -122,7 +122,7 @@ export function ComputerReservationClient({
           </div>
 
           <div className="space-y-1">
-            <Label>Hora de fin</Label>
+            <Label>Hora de Fin</Label>
             <select
               value={endTime}
               onChange={(e) => {

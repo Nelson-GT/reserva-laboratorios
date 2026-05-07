@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
+import { TablePagination } from '@/components/ui/table-pagination';
 import { CheckCircle, XCircle, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +69,11 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
       : users;
   }, [users, search]);
 
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [search]);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   function remove(id: string) {
     setUsers((prev) => prev.filter((u) => u.id !== id));
   }
@@ -115,21 +121,21 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
       <div className="bg-white border-y border-slate-200 overflow-hidden shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow className="bg-slate-50">
-            <TableHead>Nombre Completo</TableHead>
-            <TableHead>Cédula de Identidad</TableHead>
-            <TableHead>Correo Electrónico</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Registro</TableHead>
+          <TableRow className="bg-slate-50 border-b border-slate-200">
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Nombre Completo</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cédula de Identidad</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Correo Electrónico</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Registro</TableHead>
             <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.map((user) => (
+          {paginated.map((user) => (
             <TableRow key={user.id} className="hover:bg-slate-50">
               <TableCell className="font-medium">{user.fullName}</TableCell>
-              <TableCell className="text-slate-600">{user.cedula}</TableCell>
+              <TableCell className="text-slate-600">C.I. {user.cedula}</TableCell>
               <TableCell className="text-slate-600 text-sm">{user.email}</TableCell>
               <TableCell>
                 <Badge variant="outline">{ROLE_LABELS[user.role] ?? user.role}</Badge>
@@ -176,6 +182,7 @@ export function PendingUsersTable({ users: initial }: { users: User[] }) {
           ))}
         </TableBody>
       </Table>
+        <TablePagination total={filtered.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
       )}
     </>

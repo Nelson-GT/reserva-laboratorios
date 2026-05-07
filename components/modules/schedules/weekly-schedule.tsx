@@ -27,14 +27,14 @@ export function WeeklySchedule({ schedule }: WeeklyScheduleProps) {
     <div className="bg-white rounded-lg border border-slate-200 overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="bg-slate-100 border-b border-slate-200">
-            <th className="px-4 py-3 text-left font-semibold text-slate-900 text-sm">
+          <tr className="bg-slate-50 border-b border-slate-200">
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Hora
             </th>
             {days.map((day) => (
               <th
                 key={day.value}
-                className="px-4 py-3 text-center font-semibold text-slate-900 text-sm min-w-32"
+                className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-32"
               >
                 {day.name}
               </th>

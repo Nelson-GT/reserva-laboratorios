@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -9,6 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { TablePagination } from '@/components/ui/table-pagination';
 import { User, UserRole } from '@/lib/types';
 
 interface UsersTableProps {
@@ -16,6 +18,10 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users }: UsersTableProps) {
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const paginated = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const getRoleLabel = (role: UserRole): string => {
     const roleMap: Record<UserRole, string> = {
       admin: 'Administrador',
@@ -36,12 +42,12 @@ export function UsersTable({ users }: UsersTableProps) {
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
       <Table>
-        <TableHeader className="bg-slate-100">
-          <TableRow>
-            <TableHead className="font-semibold text-slate-900">Cédula</TableHead>
-            <TableHead className="font-semibold text-slate-900">Nombre Completo</TableHead>
-            <TableHead className="font-semibold text-slate-900">Rol</TableHead>
-            <TableHead className="font-semibold text-slate-900">Estado</TableHead>
+        <TableHeader>
+          <TableRow className="bg-slate-50 border-b border-slate-200">
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cédula</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Nombre Completo</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</TableHead>
+            <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,10 +58,10 @@ export function UsersTable({ users }: UsersTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            users.map((user) => (
+            paginated.map((user) => (
               <TableRow key={user.id} className="hover:bg-slate-50">
                 <TableCell className="font-medium text-slate-900">
-                  {user.cedula}
+                  C.I. {user.cedula}
                 </TableCell>
                 <TableCell className="text-slate-700">{user.fullName}</TableCell>
                 <TableCell>
@@ -73,6 +79,7 @@ export function UsersTable({ users }: UsersTableProps) {
           )}
         </TableBody>
       </Table>
+      <TablePagination total={users.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
     </div>
   );
 }

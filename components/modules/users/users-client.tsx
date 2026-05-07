@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
-import { Pencil, Ban, CheckCircle, Search, UserPlus, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
+import { TablePagination } from '@/components/ui/table-pagination';
+import { Pencil, Ban, CheckCircle, Search, UserPlus, Eye, EyeOff, AlertCircle, Loader2, History } from 'lucide-react';
+import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -113,6 +115,11 @@ export function UsersClient({ users: initial }: { users: User[] }) {
     });
   }, [users, search, roleFilter]);
 
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [search, roleFilter]);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   function openEdit(user: User) {
     setEditForm({ fullName: user.fullName, cedula: user.cedula, email: user.email, role: user.role });
     setEditError('');
@@ -176,27 +183,27 @@ export function UsersClient({ users: initial }: { users: User[] }) {
       <div className="bg-white border-y border-slate-200 overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50">
-              <TableHead>Nombre Completo</TableHead>
-              <TableHead>Cédula de Identidad</TableHead>
-              <TableHead>Correo Electrónico</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
+            <TableRow className="bg-slate-50 border-b border-slate-200">
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Nombre Completo</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cédula de Identidad</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Correo Electrónico</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estado</TableHead>
               <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {paginated.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12 text-slate-400">
                   No se encontraron usuarios.
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((user) => (
+            {paginated.map((user) => (
               <TableRow key={user.id} className="hover:bg-slate-50">
                 <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell className="text-slate-600">{user.cedula}</TableCell>
+                <TableCell className="text-slate-600">C.I. {user.cedula}</TableCell>
                 <TableCell className="text-slate-600 text-sm">{user.email}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{ROLE_LABELS[user.role] ?? user.role}</Badge>
@@ -214,6 +221,11 @@ export function UsersClient({ users: initial }: { users: User[] }) {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <Button size="sm" variant="outline" asChild title="Ver historial de reservas">
+                      <Link href={`/admin/users/${user.id}/reservations`}>
+                        <History className="w-3.5 h-3.5" />
+                      </Link>
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -249,6 +261,7 @@ export function UsersClient({ users: initial }: { users: User[] }) {
             ))}
           </TableBody>
         </Table>
+        <TablePagination total={filtered.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
 
       {/* Dialog de registro */}

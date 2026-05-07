@@ -5,6 +5,23 @@ import { generatePublicId } from '@/lib/computers';
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(_req: Request, { params }: Params) {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  const { id: laboratoryId } = await params;
+
+  const computers = await prisma.computer.findMany({
+    where: { laboratoryId },
+    select: { id: true, number: true, publicId: true, status: true },
+    orderBy: { number: 'asc' },
+  });
+
+  return NextResponse.json(computers);
+}
+
 export async function POST(_req: Request, { params }: Params) {
   const session = await getSession();
   if (!session || session.role !== 'admin') {
