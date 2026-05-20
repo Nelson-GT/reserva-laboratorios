@@ -143,9 +143,17 @@ export async function loginAction(
     };
   }
 
-  await setSession({ userId: user.id, role: user.role, email: user.email });
-  
-  redirect('/dashboard');
+  const code = await createOtp(user.id, 'login');
+
+  try {
+    await sendOtpEmail(user.email, code, 'login');
+  } catch (err) {
+    console.error('[OTP] Error enviando correo de inicio de sesión — código disponible en la DB:', err);
+  }
+
+  await setOtpPending(user.id, 'login');
+
+  redirect('/verify-otp');
 }
 
 // ─── Verificar OTP ────────────────────────────────────────────────────────────
@@ -178,12 +186,35 @@ export async function verifyOtpAction(
 
   await clearOtpPending();
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { emailVerified: true, status: 'pending_approval' },
-  });
-  
-  redirect('/login?verified=1');
+  if (purpose === 'register') {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { emailVerified: true, status: 'pending_approval' },
+    });
+
+    redirect('/login?verified=1');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    return { error: 'Usuario no encontrado.' };
+  }
+
+  if (user.status === 'pending_approval') {
+    return {
+      error:
+        'Tu cuenta está pendiente de aprobación por el administrador. Recibirás una notificación cuando sea activada.',
+    };
+  }
+
+  if (user.status === 'blocked') {
+    return { error: 'Tu cuenta ha sido bloqueada. Contacta al administrador.' };
+  }
+
+  await setSession({ userId: user.id, role: user.role, email: user.email });
+
+  redirect('/dashboard');
 }
 
 // ─── Reenviar OTP ─────────────────────────────────────────────────────────────
