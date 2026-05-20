@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
 import { TablePagination } from '@/components/ui/table-pagination';
-import { Pencil, Ban, CheckCircle, Search, UserPlus, Eye, EyeOff, AlertCircle, Loader2, History } from 'lucide-react';
+import { Pencil, Ban, CheckCircle, Search, UserPlus, Upload, Eye, EyeOff, AlertCircle, Loader2, History } from 'lucide-react';
 import Link from 'next/link';
+import { ImportUsersDialog } from './import-users-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,8 +69,11 @@ export function UsersClient({ users: initial }: { users: User[] }) {
   const [editError, setEditError] = useState('');
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => { setUsers(initial); }, [initial]);
+
   // ── Register ──────────────────────────────────────────────────────────────
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [regForm, setRegForm] = useState({ fullName: '', cedula: '', email: '', role: 'student', password: '' });
   const [regError, setRegError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -173,6 +177,10 @@ export function UsersClient({ users: initial }: { users: User[] }) {
             <SelectItem value="student">Estudiantes</SelectItem>
           </SelectContent>
         </Select>
+        <Button variant="outline" onClick={() => setImportOpen(true)} className="flex-shrink-0 self-start sm:self-auto">
+          <Upload className="w-4 h-4 mr-0.5" />
+          Importar
+        </Button>
         <Button onClick={openRegister} className="flex-shrink-0 self-start sm:self-auto">
           <UserPlus className="w-4 h-4 mr-0.5" />
           Registrar
@@ -263,6 +271,9 @@ export function UsersClient({ users: initial }: { users: User[] }) {
         </Table>
         <TablePagination total={filtered.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
+
+      {/* Dialog de importación masiva */}
+      <ImportUsersDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Dialog de registro */}
       <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
