@@ -25,12 +25,7 @@ export function getEffectiveStatus(reservation: {
   return new Date() > endDateTime ? 'finished' : reservation.status;
 }
 
-export const TIME_SLOTS = [
-  { label: '07:00 - 09:00', start: '07:00', end: '09:00' },
-  { label: '09:00 - 11:00', start: '09:00', end: '11:00' },
-  { label: '11:00 - 13:00', start: '11:00', end: '13:00' },
-  { label: '13:00 - 15:00', start: '13:00', end: '15:00' },
-  { label: '15:00 - 17:00', start: '15:00', end: '17:00' },
-  { label: '17:00 - 19:00', start: '17:00', end: '19:00' },
-  { label: '19:00 - 21:00', start: '19:00', end: '21:00' },
-] as const;
+export const TIME_SLOTS = Array.from({ length: 14 }, (_, i) => {
+  const pad = (h: number) => `${String(h).padStart(2, '0')}:00`;
+  return { label: `${pad(7 + i)} - ${pad(8 + i)}`, start: pad(7 + i), end: pad(8 + i) };
+});

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { timesOverlap } from '@/lib/reservations';
+import { sendReservationEmail } from '@/lib/email';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,7 +15,14 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
-  const reservation = await prisma.reservation.findUnique({ where: { id } });
+  const reservation = await prisma.reservation.findUnique({
+    where: { id },
+    include: {
+      user: { select: { email: true } },
+      laboratory: { select: { name: true } },
+      computerReservations: { include: { computer: { select: { number: true } } } },
+    },
+  });
   if (!reservation) {
     return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 });
   }
@@ -34,6 +42,15 @@ export async function PATCH(request: Request, { params }: Params) {
         );
       }
       const updated = await prisma.reservation.update({ where: { id }, data: { status: 'cancelled' } });
+      sendReservationEmail(reservation.user.email, 'cancelled', {
+        labName: reservation.laboratory.name,
+        date: reservation.date,
+        startTime: reservation.startTime,
+        endTime: reservation.endTime,
+        type: reservation.type,
+        purpose: reservation.purpose,
+        computerNumber: reservation.computerReservations[0]?.computer.number,
+      }).catch(() => {});
       return NextResponse.json(updated);
     }
 
@@ -224,6 +241,16 @@ export async function PATCH(request: Request, { params }: Params) {
       computerReservations: { include: { computer: { select: { id: true, number: true, publicId: true } } } },
     },
   });
+
+  sendReservationEmail(reservation.user.email, status as 'approved' | 'rejected' | 'cancelled' | 'finished', {
+    labName: updated.laboratory.name,
+    date: reservation.date,
+    startTime: reservation.startTime,
+    endTime: reservation.endTime,
+    type: reservation.type,
+    purpose: reservation.purpose,
+    computerNumber: reservation.computerReservations[0]?.computer.number,
+  }).catch(() => {});
 
   return NextResponse.json(updated);
 }

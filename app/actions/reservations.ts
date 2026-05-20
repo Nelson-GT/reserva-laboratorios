@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { timesOverlap } from '@/lib/reservations';
+import { sendReservationEmail } from '@/lib/email';
 import type { ActionState } from './auth';
 
 // ─── Reserva de Laboratorio (Profesor) ───────────────────────────────────────
@@ -95,6 +96,11 @@ export async function createLabReservationAction(
       status: 'pending',
     },
   });
+
+  const targetUser = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true } });
+  if (targetUser) {
+    sendReservationEmail(targetUser.email, 'created', { labName: lab.name, date, startTime, endTime, type: 'lab', purpose }).catch(() => {});
+  }
 
   revalidatePath('/reservations');
   return { success: 'Reserva de laboratorio enviada. Pendiente de aprobación.' };
@@ -201,6 +207,11 @@ export async function createComputerReservationAction(
     data: { reservationId: reservation.id, computerId },
   });
 
+  const targetUser = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true } });
+  if (targetUser) {
+    sendReservationEmail(targetUser.email, 'created', { labName: computer.laboratory.name, date, startTime, endTime, type: 'computer', purpose, computerNumber: computer.number }).catch(() => {});
+  }
+
   revalidatePath('/reservations');
   revalidatePath('/computers');
   return { success: 'Reserva de computadora enviada. Pendiente de aprobación.' };
@@ -294,6 +305,13 @@ export async function createRecurringLabReservationAction(
 
   if (created.length === 0) {
     return { error: 'No se pudo crear ninguna reserva. Todas las fechas tienen conflictos de horario.', skipped };
+  }
+
+  // Enviar un correo resumen con la primera fecha creada como referencia
+  const targetUser = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true } });
+  if (targetUser && created.length > 0) {
+    const purpose = `${(formData.get('purpose') as string ?? '').trim()} (${created.length} fecha${created.length > 1 ? 's' : ''} recurrente${created.length > 1 ? 's' : ''})`;
+    sendReservationEmail(targetUser.email, 'created', { labName: lab.name, date: created[0], startTime, endTime, type: 'lab', purpose }).catch(() => {});
   }
 
   return {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { sendAccountApprovedEmail } from '@/lib/email';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -75,6 +76,8 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: 'No hay campos para actualizar' }, { status: 400 });
   }
 
+  const previous = await prisma.user.findUnique({ where: { id }, select: { status: true } });
+
   const user = await prisma.user.update({
     where: { id },
     data,
@@ -88,6 +91,10 @@ export async function PATCH(request: Request, { params }: Params) {
       createdAt: true,
     },
   });
+
+  if (data.status === 'active' && previous?.status === 'pending_approval') {
+    sendAccountApprovedEmail(user.email, user.fullName).catch(() => {});
+  }
 
   return NextResponse.json(user);
 }

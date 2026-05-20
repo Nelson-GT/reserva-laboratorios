@@ -143,17 +143,9 @@ export async function loginAction(
     };
   }
 
-  const code = await createOtp(user.id, 'login');
+  await setSession({ userId: user.id, role: user.role, email: user.email });
 
-  try {
-    await sendOtpEmail(user.email, code, 'login');
-  } catch (err) {
-    console.error('[OTP] Error enviando correo de inicio de sesión — código disponible en la DB:', err);
-  }
-
-  await setOtpPending(user.id, 'login');
-
-  redirect('/verify-otp');
+  redirect('/dashboard');
 }
 
 // ─── Verificar OTP ────────────────────────────────────────────────────────────
