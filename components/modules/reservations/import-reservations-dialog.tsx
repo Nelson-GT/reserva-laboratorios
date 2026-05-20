@@ -103,7 +103,7 @@ export function ImportReservationsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Importar Reservas</DialogTitle>
         </DialogHeader>
@@ -124,14 +124,14 @@ export function ImportReservationsDialog({
               <FileSpreadsheet className="w-5 h-5 text-green-600 flex-shrink-0" />
               <span className="flex-1">
                 <span className="font-medium">Descargar plantilla Excel</span>
-                <span className="block text-xs text-slate-400">plantilla-reservas.xlsx · incluye laboratorios disponibles</span>
+                <span className="block text-xs text-slate-400">plantilla-reservas.xlsx</span>
               </span>
               <Download className="w-4 h-4 text-slate-400" />
             </a>
 
             {/* File upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Archivo a importar</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-slate-700">Archivo de Importación de Datos</label>
               <label
                 htmlFor="import-reservations-file"
                 className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 cursor-pointer transition-colors ${
@@ -204,7 +204,7 @@ export function ImportReservationsDialog({
                 <tbody className="divide-y divide-slate-100">
                   {summary.results.map((r) => (
                     <tr key={r.row} className={r.status === 'error' ? 'bg-red-50' : ''}>
-                      <td className="px-3 py-2 text-slate-400">{r.row}</td>
+                      <td className="px-3 py-2 text-slate-400">{r.row - 1}</td>
                       <td className="px-3 py-2 font-medium text-slate-700">{r.label}</td>
                       <td className="px-3 py-2">
                         {r.status === 'success' ? (
