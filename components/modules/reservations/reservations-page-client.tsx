@@ -4,8 +4,9 @@ import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CheckCircle, XCircle, Ban, Pencil, AlertCircle, Loader2,
-  Search, Plus, CalendarCheck, RefreshCw, Monitor, ChevronRight,
+  Search, Plus, Upload, CalendarCheck, RefreshCw, Monitor, ChevronRight,
 } from 'lucide-react';
+import { ImportReservationsDialog } from './import-reservations-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -148,6 +149,7 @@ export function ReservationsPageClient({
   // ────────────────────────────────────────────────────────────────────────────
   // ADMIN: Registrar reserva (multi-paso)
   // ────────────────────────────────────────────────────────────────────────────
+  const [importOpen, setImportOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminStep, setAdminStep] = useState<1 | 2>(1);
   const [adminTargetRole, setAdminTargetRole] = useState<'' | 'professor' | 'student'>('');
@@ -591,10 +593,16 @@ export function ReservationsPageClient({
           })}
         </div>
         {isAdmin && (
-          <Button onClick={openAdminDialog} className="flex-shrink-0 self-start sm:self-auto">
-            <Plus className="w-4 h-4 mr-0.5" />
-            Registrar Reserva
-          </Button>
+          <div className="flex gap-2 flex-shrink-0 self-start sm:self-auto">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-0.5" />
+              Importar
+            </Button>
+            <Button onClick={openAdminDialog}>
+              <Plus className="w-4 h-4 mr-0.5" />
+              Registrar Reserva
+            </Button>
+          </div>
         )}
         {role === 'professor' && (
           <Button onClick={openProfDialog} className="flex-shrink-0 self-start sm:self-auto">
@@ -723,6 +731,11 @@ export function ReservationsPageClient({
         </Table>
         <TablePagination total={filtered.length} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} />
       </div>
+
+      {/* ══ ADMIN: importación masiva ══════════════════════════════════════════ */}
+      {isAdmin && (
+        <ImportReservationsDialog open={importOpen} onOpenChange={setImportOpen} />
+      )}
 
       {/* ══ ADMIN: registrar reserva (multi-paso) ══════════════════════════════ */}
       {isAdmin && (
