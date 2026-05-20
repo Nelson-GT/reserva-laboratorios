@@ -96,6 +96,12 @@ export async function PATCH(request: Request, { params }: Params) {
           computerReservations: { include: { computer: { select: { id: true, number: true, publicId: true } } } },
         },
       });
+      sendReservationEmail(reservation.user.email, 'updated', {
+        labName: updated.laboratory.name,
+        date: reservation.date, startTime: reservation.startTime, endTime: reservation.endTime,
+        type: reservation.type, purpose: reservation.purpose,
+        computerNumber: updated.computerReservations[0]?.computer.number,
+      }).catch(() => {});
       return NextResponse.json(updated);
     }
 
@@ -148,6 +154,14 @@ export async function PATCH(request: Request, { params }: Params) {
           computerReservations: { include: { computer: { select: { id: true, number: true, publicId: true } } } },
         },
       });
+      if (updated) {
+        sendReservationEmail(reservation.user.email, 'updated', {
+          labName: updated.laboratory.name,
+          date: reservation.date, startTime: reservation.startTime, endTime: reservation.endTime,
+          type: reservation.type, purpose: reservation.purpose,
+          computerNumber: updated.computerReservations[0]?.computer.number,
+        }).catch(() => {});
+      }
       return NextResponse.json(updated);
     }
 
@@ -185,6 +199,12 @@ export async function PATCH(request: Request, { params }: Params) {
       data: { laboratoryId: newLabId },
       include: { laboratory: { select: { name: true } }, computerReservations: { include: { computer: { select: { id: true, number: true, publicId: true } } } } },
     });
+    sendReservationEmail(reservation.user.email, 'updated', {
+      labName: updated.laboratory.name,
+      date: reservation.date, startTime: reservation.startTime, endTime: reservation.endTime,
+      type: reservation.type, purpose: reservation.purpose,
+      computerNumber: updated.computerReservations[0]?.computer.number,
+    }).catch(() => {});
     return NextResponse.json(updated);
   }
 
@@ -223,6 +243,14 @@ export async function PATCH(request: Request, { params }: Params) {
       where: { id },
       include: { laboratory: { select: { name: true } }, computerReservations: { include: { computer: { select: { id: true, number: true, publicId: true } } } } },
     });
+    if (updated) {
+      sendReservationEmail(reservation.user.email, 'updated', {
+        labName: updated.laboratory.name,
+        date: reservation.date, startTime: reservation.startTime, endTime: reservation.endTime,
+        type: reservation.type, purpose: reservation.purpose,
+        computerNumber: updated.computerReservations[0]?.computer.number,
+      }).catch(() => {});
+    }
     return NextResponse.json(updated);
   }
 

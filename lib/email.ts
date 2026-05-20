@@ -218,14 +218,15 @@ export async function sendReservationReminderEmail(
 
 // ─── Reservation emails ───────────────────────────────────────────────────────
 
-type ReservationEvent = 'created' | 'approved' | 'rejected' | 'cancelled' | 'finished';
+type ReservationEvent = 'created' | 'approved' | 'rejected' | 'cancelled' | 'finished' | 'updated';
 
 const EVENT_META: Record<ReservationEvent, { subject: string; heading: string; message: string; color: string; badge: string }> = {
-  created:   { subject: 'Reserva recibida',   heading: 'Solicitud recibida',     message: 'Tu solicitud ha sido registrada y está <strong>pendiente de aprobación</strong>. Te notificaremos cuando el administrador la revise.', color: '#1e40af', badge: '#dbeafe' },
-  approved:  { subject: 'Reserva aprobada',   heading: '¡Reserva aprobada!',     message: 'Tu reserva ha sido <strong>aprobada</strong>. Recuerda presentarte puntualmente en la fecha y horario indicados.', color: '#15803d', badge: '#dcfce7' },
-  rejected:  { subject: 'Reserva rechazada',  heading: 'Reserva rechazada',      message: 'Tu solicitud de reserva fue <strong>rechazada</strong> por el administrador. Puedes crear una nueva solicitud si lo deseas.', color: '#b91c1c', badge: '#fee2e2' },
-  cancelled: { subject: 'Reserva cancelada',  heading: 'Reserva cancelada',      message: 'Tu reserva ha sido <strong>cancelada</strong>. Si tienes alguna duda, contacta al administrador.', color: '#475569', badge: '#f1f5f9' },
-  finished:  { subject: 'Reserva finalizada', heading: 'Reserva finalizada',     message: 'Tu reserva ha <strong>finalizado</strong>. Esperamos que haya sido de utilidad.', color: '#1e40af', badge: '#dbeafe' },
+  created:   { subject: 'Reserva recibida',       heading: 'Solicitud recibida',       message: 'Tu solicitud ha sido registrada y está <strong>pendiente de aprobación</strong>. Te notificaremos cuando el administrador la revise.', color: '#1e40af', badge: '#dbeafe' },
+  approved:  { subject: 'Reserva aprobada',       heading: '¡Reserva aprobada!',       message: 'Tu reserva ha sido <strong>aprobada</strong>. Recuerda presentarte puntualmente en la fecha y horario indicados.', color: '#15803d', badge: '#dcfce7' },
+  rejected:  { subject: 'Reserva rechazada',      heading: 'Reserva rechazada',        message: 'Tu solicitud de reserva fue <strong>rechazada</strong> por el administrador. Puedes crear una nueva solicitud si lo deseas.', color: '#b91c1c', badge: '#fee2e2' },
+  cancelled: { subject: 'Reserva cancelada',      heading: 'Reserva cancelada',        message: 'Tu reserva ha sido <strong>cancelada</strong>. Si tienes alguna duda, contacta al administrador.', color: '#475569', badge: '#f1f5f9' },
+  finished:  { subject: 'Reserva finalizada',     heading: 'Reserva finalizada',       message: 'Tu reserva ha <strong>finalizado</strong>. Esperamos que haya sido de utilidad.', color: '#1e40af', badge: '#dbeafe' },
+  updated:   { subject: 'Reserva actualizada',    heading: 'Reserva actualizada',      message: 'Los datos de tu reserva han sido <strong>actualizados</strong>. A continuación encontrarás la información vigente.', color: '#7c3aed', badge: '#ede9fe' },
 };
 
 function formatDate(dateStr: string): string {
