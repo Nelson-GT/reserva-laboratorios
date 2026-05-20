@@ -317,13 +317,16 @@ export async function cancelReservationAction(
 
   if (!reservation) return { error: 'Reserva no encontrada.' };
 
-  // Solo el dueño o el admin puede cancelar
-  if (reservation.userId !== session.userId && session.role !== 'admin') {
+  const isAdmin = session.role === 'admin';
+  const isOwner = reservation.userId === session.userId;
+
+  if (!isOwner && !isAdmin) {
     return { error: 'No tienes permiso para cancelar esta reserva.' };
   }
 
-  if (!['pending', 'approved'].includes(reservation.status)) {
-    return { error: 'Solo se pueden cancelar reservas pendientes o aprobadas.' };
+  const allowedStatuses = isAdmin ? ['pending', 'approved'] : ['pending'];
+  if (!allowedStatuses.includes(reservation.status)) {
+    return { error: isAdmin ? 'Solo se pueden cancelar reservas pendientes o aprobadas.' : 'Solo se pueden cancelar reservas pendientes.' };
   }
 
   await prisma.reservation.update({

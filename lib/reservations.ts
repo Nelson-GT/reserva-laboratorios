@@ -14,6 +14,17 @@ export function timesOverlap(
   return startA < endB && endA > startB;
 }
 
+export function getEffectiveStatus(reservation: {
+  status: string;
+  date: string;
+  endTime: string;
+}): string {
+  if (reservation.status !== 'approved') return reservation.status;
+  const dateStr = reservation.date.slice(0, 10);
+  const endDateTime = new Date(`${dateStr}T${reservation.endTime}:00`);
+  return new Date() > endDateTime ? 'finished' : reservation.status;
+}
+
 export const TIME_SLOTS = [
   { label: '07:00 - 09:00', start: '07:00', end: '09:00' },
   { label: '09:00 - 11:00', start: '09:00', end: '11:00' },

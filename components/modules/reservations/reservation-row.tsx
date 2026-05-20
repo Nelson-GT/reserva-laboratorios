@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { useState } from 'react';
+import { getEffectiveStatus } from '@/lib/reservations';
 
 interface ReservationRowProps {
   reservation: Reservation;
 }
 
 export function ReservationRow({ reservation }: ReservationRowProps) {
-  const [status, setStatus] = useState(reservation.status);
+  const [status, setStatus] = useState(getEffectiveStatus(reservation));
 
   const getStatusColor = (status: string) => {
     switch (status) {

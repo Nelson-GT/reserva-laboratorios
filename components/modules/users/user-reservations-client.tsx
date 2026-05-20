@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { getEffectiveStatus } from '@/lib/reservations';
 import { TablePagination } from '@/components/ui/table-pagination';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -55,7 +56,7 @@ export function UserReservationsClient({ reservations }: { reservations: Reserva
         r.laboratory.name.toLowerCase().includes(q) ||
         (r.purpose ?? '').toLowerCase().includes(q) ||
         r.date.includes(q) ||
-        STATUS_LABELS[r.status]?.toLowerCase().includes(q)
+        STATUS_LABELS[getEffectiveStatus(r)]?.toLowerCase().includes(q)
     );
   }, [reservations, search]);
 
@@ -65,7 +66,7 @@ export function UserReservationsClient({ reservations }: { reservations: Reserva
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const counts = Object.fromEntries(
-    STRIP.map(([key]) => [key, reservations.filter((r) => r.status === key).length])
+    STRIP.map(([key]) => [key, reservations.filter((r) => getEffectiveStatus(r) === key).length])
   );
 
   return (
@@ -134,8 +135,8 @@ export function UserReservationsClient({ reservations }: { reservations: Reserva
                       <span className="truncate block">{r.purpose ?? '—'}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[r.status] ?? ''}`}>
-                        {STATUS_LABELS[r.status] ?? r.status}
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[getEffectiveStatus(r)] ?? ''}`}>
+                        {STATUS_LABELS[getEffectiveStatus(r)] ?? r.status}
                       </span>
                     </td>
                   </tr>

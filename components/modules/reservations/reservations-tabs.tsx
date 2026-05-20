@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Reservation, ReservationStatus } from '@/lib/types';
 import { ReservationRow } from './reservation-row';
+import { getEffectiveStatus } from '@/lib/reservations';
 
 interface ReservationsTabsProps {
   reservations: Reservation[];
@@ -18,7 +19,7 @@ export function ReservationsTabs({ reservations }: ReservationsTabsProps) {
   ];
 
   const getReservationsByStatus = (status: ReservationStatus) => {
-    return reservations.filter((res) => res.status === status);
+    return reservations.filter((res) => getEffectiveStatus(res) === status);
   };
 
   return (

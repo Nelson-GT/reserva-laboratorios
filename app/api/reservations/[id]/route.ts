@@ -25,11 +25,11 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    // Cancelar (pendiente o aprobada)
+    // Cancelar (solo pendiente para no-admin)
     if (body.status === 'cancelled') {
-      if (!['pending', 'approved'].includes(reservation.status)) {
+      if (reservation.status !== 'pending') {
         return NextResponse.json(
-          { error: 'Solo se pueden cancelar reservas pendientes o aprobadas' },
+          { error: 'Solo se pueden cancelar reservas pendientes' },
           { status: 400 }
         );
       }

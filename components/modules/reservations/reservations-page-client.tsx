@@ -40,7 +40,7 @@ import {
   createRecurringLabReservationAction,
   createComputerReservationAction,
 } from '@/app/actions/reservations';
-import { TIME_SLOTS } from '@/lib/reservations';
+import { TIME_SLOTS, getEffectiveStatus } from '@/lib/reservations';
 import { format } from 'date-fns';
 
 type Lab = { id: string; name: string; capacity: number; operational: number };
@@ -126,7 +126,7 @@ export function ReservationsPageClient({
 
   // ── Filter + pagination ────────────────────────────────────────────────────
   const byStatus = useMemo(
-    () => reservations.filter((r) => r.status === activeTab),
+    () => reservations.filter((r) => getEffectiveStatus(r) === activeTab),
     [reservations, activeTab]
   );
 
@@ -575,7 +575,7 @@ export function ReservationsPageClient({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {TABS.map((tab) => {
-            const count = reservations.filter((r) => r.status === tab).length;
+            const count = reservations.filter((r) => getEffectiveStatus(r) === tab).length;
             return (
               <button
                 key={tab}
@@ -700,9 +700,14 @@ export function ReservationsPageClient({
                 {/* Admin: approved */}
                 {isAdmin && activeTab === 'approved' && (
                   <TableCell className="text-right">
-                    <Button size="sm" variant="outline" disabled={isPending} onClick={() => openEdit(r)}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => openEdit(r)}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-red-700 border-red-300 hover:bg-red-50" disabled={isPending} onClick={() => handleStatus(r.id, 'cancelled')}>
+                        <Ban className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 )}
 
